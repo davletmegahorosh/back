@@ -13,16 +13,21 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'user',
+    'catalog',
+    'users',
+
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
     'drf_spectacular',
     'django.contrib.admin',
     'django.contrib.auth',
+    'django.contrib.sites',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'catalog',
     'rest_framework',
-    'djoser',
     'rest_framework.authtoken',
 ]
 
@@ -64,12 +69,14 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',}
 }
 
-AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',},
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',}
+
+AUTHENTICATION_BACKENDS = [
+    # 'allauth.account.auth_backends.AuthenticationBackend',
+    'users.models.CustomUsers',
+    'django.contrib.auth.backends.ModelBackend',
 ]
+
+SITE_ID = 1
 
 LANGUAGE_CODE = 'ru'
 
@@ -89,39 +96,19 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
     ],
-    'DEFAULT_PERMISSION_CLASSES' : ['rest_framework.permissions.AllowAny'],
-    'DEFAULT_AUTHENTICATION_CLASSES': ['rest_framework_simplejwt.authentication.JWTAuthentication',
-                                       # 'rest_framework.authentication.TokenAuthentication',
-                                       # 'rest_framework.authentication.BasicAuthentication',
-                                       # 'rest_framework.authentication.SessionAuthentication',
-                                       ],
+    # 'DEFAULT_PERMISSION_CLASSES' : ['rest_framework.permissions.AllowAny'],
+    'DEFAULT_AUTHENTICATION_CLASSES': ['rest_framework_simplejwt.authentication.JWTAuthentication'],
 }
 
-AUTHENTICATION_BACKENDS = [
-    # ...
-    'allauth.account.auth_backends.AuthenticationBackend',
-    # ...
-]
-ACCOUNT_ADAPTER = 'user_test.adapters.CustomAccountAdapter'
-
-DJOSER = {
-    "USER_ID_FIELD": "username",
-    "LOGIN_FIELD": "email",
-    "SEND_ACTIVATION_EMAIL": True,
-    "ACTIVATION_URL": "activate/{uid}/{token}",
-    'SERIALIZERS': {
-        'token_create': 'apps.accounts.serializers.CustomTokenCreateSerializer',
-    },
-}
-
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-SITE_NAME = "SaaSitive"
-
-ACCOUNT_EMAIL_VERIFICATION = 'none'
+ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+ACCOUNT_UNIQUE_EMAIL = True
+ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_UNIQUE_USERNAME = True
+ACCOUNT_USERNAME_MIN_LENGTH = 3
+ACCOUNT_SESSION_REMEMBER = True
+ACCOUNT_LOGOUT_ON_GET = True
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Your Project API',
@@ -145,13 +132,6 @@ DJOSER = {
     'SEND_ACTIVATION_EMAIL': True,
     'SERIALIZERS': {
         'user_create': 'path.to.serializers.CustomUserCreateSerializer',
-        # 'user_create': 'path.to.custom.UserCreateSerializer',
-        # 'user': 'path.to.custom.UserSerializer',
-        # 'current_user': 'path.to.custom.CurrentUserSerializer',
-        # 'token': 'djoser.serializers.TokenCreateSerializer',
-        # 'token_create': 'djoser.serializers.TokenCreateSerializer',
-        # 'token_refresh': 'djoser.serializers.TokenRefreshSerializer',
-        # 'token_verify': 'djoser.serializers.TokenVerifySerializer',
     },
 }
 
