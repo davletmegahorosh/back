@@ -15,6 +15,7 @@ INSTALLED_APPS = [
     'user',
     'catalog',
     'users',
+    'gpt',
 
     'allauth',
     'allauth.account',

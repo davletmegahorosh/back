@@ -9,6 +9,7 @@ class MedicineSerializer(serializers.ModelSerializer):
         fields = "__all__"
         depth = 1
 
+
 class CategoriesSerializer(serializers.ModelSerializer):
     class Meta:
         model = Type_of_med
