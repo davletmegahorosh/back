@@ -1,57 +1,83 @@
+# views.py
+
+import os
+import uuid
+from django.core.files.base import ContentFile
+from django.conf import settings
 from django.http import HttpResponse
-from openai import OpenAI
-import requests
-from rest_framework import generics, permissions
+from rest_framework import permissions, status
 from rest_framework.response import Response
-from .serializers import Messages, Chat
-from .models import Message
-from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
-from rest_framework import status
-from decouple import config
-from catalog.models import Medicine
+from .models import ChatRecord  # Import ChatRecord model
+from .serializers import ChatRecordSerializer
+from .serializers import Messages
+from openai import OpenAI
+from gtts import gTTS
 
-key = config('KEY')
+client = OpenAI(api_key='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')
 
-client = OpenAI(
-    api_key=key
-)
-from catalog.serializers import MedicineSerializer
+def save_audio_file(text, file_name):
+    audio_directory = os.path.join(settings.MEDIA_ROOT, 'audio')
 
-class Respone(APIView):
+    # Check if the directory exists, and create it if it doesn't
+    if not os.path.exists(audio_directory):
+        os.makedirs(audio_directory)
+
+    audio_file_path = os.path.join(audio_directory, file_name)
+
+    # Create audio from text and save it
+    tts = gTTS(text, lang='ru')
+    tts.save(audio_file_path)
+
+    return audio_file_path
+
+class GPTResponseApiView(APIView):
     serializer_class = Messages
-    permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=request.data)
+        serializer = Messages(data=request.data)
 
         if serializer.is_valid():
-            input_text = serializer.validated_data['text']
-
-            # Serialize the Medicine objects to JSON
-            medicines_data = MedicineSerializer(Medicine.objects.all(), many=True).data
-
-            chat_completion = client.chat.completions.create(
-                model='gpt-3.5-turbo-1106',
+            input_text = serializer.validated_data['message']
+            response = client.chat.completions.create(
+                model="gpt-3.5-turbo",
                 messages=[
                     {
-                        'medicines': medicines_data,
-                        'role': 'system',
-                        'content': "what kind of disease it could be depending on the symptoms that the user entered and recommend medications from medicines",
+                        "role": "system",
+                        "content": "Summarize content you are provided with for a second-grade student."
                     },
                     {
-                        'role': 'user',
-                        'content': input_text,
-                    },
+                        "role": "user",
+                        "content": input_text
+                    }
                 ],
                 temperature=1,
                 max_tokens=1000
             )
 
-            response_data = {'text': chat_completion.choices[0].message.content}
+            # Generate a unique file name
+            file_name = f'{uuid.uuid4()}.mp3'
+            audio_file_path = save_audio_file(response.choices[0].message.content, file_name)
 
-            response_message = Message(user=request.user, text=response_data['text'])
-            response_message.save()
+            # Form the URL to access the audio
+            audio_url = os.path.join(settings.MEDIA_URL, 'audio', file_name)
+
+            # Save user input, GPT-3 response, and audio URL to the database
+            chat_record = ChatRecord.objects.create(
+                user=request.user,  # Assuming the user is authenticated
+                input_message=input_text,
+                gpt3_response=response.choices[0].message.content,
+                audio_url=audio_url
+            )
+
+            # Serialize the chat record for response
+            chat_record_serializer = ChatRecordSerializer(chat_record)
+
+            response_data = {
+                'message': response.choices[0].message.content,
+                'audio_url': audio_url,
+                'chat_record': chat_record_serializer.data
+            }
 
             return Response(response_data, status=status.HTTP_200_OK)
         else:

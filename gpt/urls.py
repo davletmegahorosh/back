@@ -1,9 +1,9 @@
 from django.urls import path
-from .views import Respone
+from .views import GPTResponseApiView
 
 
 urlpatterns = [
-    path('', Respone.as_view()),
+    path('', GPTResponseApiView.as_view()),
 
 
 ]

@@ -75,9 +75,8 @@ class ResetPasswordView(BaseUserView, generics.CreateAPIView):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class VerifyAccount(BaseUserView, APIView):
+class VerifyAccount(APIView):
     serializer_class = VerifyAccountSerializer
-    permission_classes = [AllowAny]
 
     def post(self, request):
         serializer = VerifyAccountSerializer(data=request.data)
@@ -86,12 +85,22 @@ class VerifyAccount(BaseUserView, APIView):
 
             user = get_object_or_404(CustomUsers, confirmation_code=confirmation_code, is_active=False)
 
-            # Your additional verification logic here, if needed
-            # For example, checking if the user with the same username already exists
-
-            # Activate the user
+            # Activate the user in CustomUsers model
             user.is_active = True
             user.save()
+
+            # Create or update the user in the standard User model
+            standard_user, created = User.objects.get_or_create(
+                username=user.username,
+                email=user.email,
+                defaults={'password': user.password}
+            )
+            if not created:
+                standard_user.set_password(user.password)
+                standard_user.save()
+
+            # Delete the user from CustomUsers model
+            user.delete()
 
             return Response({'message': 'Email confirmed successfully.'}, status=status.HTTP_200_OK)
 

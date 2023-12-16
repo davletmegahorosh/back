@@ -12,7 +12,6 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
-    'user',
     'catalog',
     'users',
     'gpt',
@@ -72,11 +71,8 @@ DATABASES = {
 
 
 AUTHENTICATION_BACKENDS = [
-    # 'allauth.account.auth_backends.AuthenticationBackend',
-    'users.models.CustomUsers',
     'django.contrib.auth.backends.ModelBackend',
 ]
-
 SITE_ID = 1
 
 LANGUAGE_CODE = 'ru'

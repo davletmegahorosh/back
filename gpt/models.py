@@ -1,16 +1,11 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-class Message(models.Model):
+class ChatRecord(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    request = models.TextField()
-    response = models.TextField()
+    input_message = models.TextField()
+    gpt3_response = models.TextField()
+    audio_url = models.URLField()
 
-
-    def __str__ (self):
-        return f"response for {self.user.username}"
-
-    class Meta:
-        verbose_name = 'ответ'
-        verbose_name_plural = 'чат'
-        ordering = ['user']
+    def __str__(self):
+        return f"{self.user.username} - {self.input_message}"
