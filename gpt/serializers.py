@@ -1,9 +1,10 @@
+# serializers.py
+
 from rest_framework import serializers
 from .models import ChatRecord
 
 class Messages(serializers.Serializer):
     message = serializers.CharField(write_only=True)
-
 
 class ChatRecordSerializer(serializers.ModelSerializer):
     class Meta:
