@@ -11,7 +11,7 @@ import os, uuid
 
 
 
-client = OpenAI(api_key='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')
+client = OpenAI(api_key='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')
 
 def save_audio_file(text, file_name):
     audio_directory = os.path.join(settings.MEDIA_ROOT, 'audio')
